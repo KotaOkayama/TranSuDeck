@@ -48,7 +48,7 @@ def load_env_config():
                         key, value = line.split('=', 1)
                         env_vars[key.strip()] = value.strip()
             
-            print(f"Loaded from .env file: {env_vars}")
+            print(f"Loaded from .env file: {list(env_vars.keys())}")
             
             # Update settings with loaded values
             if 'GENAI_API_KEY' in env_vars:
@@ -97,7 +97,7 @@ def is_configured() -> bool:
     has_url = bool(settings.GENAI_API_URL and settings.GENAI_API_URL.strip())
     result = has_key and has_url
     
-    print(f"is_configured() - Key: {has_key} (value: '{settings.GENAI_API_KEY}'), URL: {has_url} (value: '{settings.GENAI_API_URL}'), Result: {result}")
+    print(f"is_configured() - Key: {has_key}, URL: {has_url}, Result: {result}")
     
     return result
 
@@ -201,6 +201,7 @@ async def get_available_models() -> List[Dict[str, str]]:
                         "original_name": model_id
                     })
             
+            # Sort models by name
             filtered_models.sort(key=lambda x: x["name"])
             
             return filtered_models

@@ -1,155 +1,110 @@
 # TranSuDeck
 
-**Translate + Summarize + Deck**
+GenAI Hubを使用した翻訳・要約・PPTX生成アプリケーション
 
-英文を翻訳してサマライズし、PPTX形式で出力するWebアプリケーション
+## 概要
 
-## 🎯 機能
+TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPointプレゼンテーションの生成を行うWebアプリケーションです。
 
-- ✨ テキスト翻訳（GenAI Hub API使用）
-- 📝 翻訳文のサマライズ（箇条書き形式）
-- 🎨 PPTXプレビュー＆編集
-- 🔄 ドラッグ＆ドロップでスライド並び替え
-- 📥 PPTX出力
-- 🌐 多言語対応（英語、日本語、韓国語、中国語など）
+## 機能
 
-## 📸 スクリーンショット
+- **翻訳**: 多言語テキスト翻訳
+- **要約**: 長文テキストの自動要約
+- **PPTX生成**: PowerPointファイルの自動生成
+- **モデル選択**: Claude、Llamaなどから選択可能
+- **初回設定**: API設定画面で.envファイルを自動生成
 
-![TranSuDeck UI](docs/screenshot.png)
+## 必要要件
 
-## 🚀 クイックスタート
+- Python 3.11以上
+- GenAI Hub APIアクセス権限
+- Docker & Docker Compose（オプション）
 
-### Docker使用（推奨）
+## クイックスタート
+
+### Dockerを使用（推奨）
 
 ```bash
-# 1. リポジトリをクローン
-git clone https://github.com/yourusername/TranSuDeck.git
+# リポジトリのクローン
+git clone <repository-url>
 cd TranSuDeck
 
-# 2. 環境変数設定
-cp .env.example .env
-# .envを編集してAPI設定を記入
-
-# 3. コンテナ起動
-docker-compose up -d
-
-# 4. アクセス
-open http://localhost:8000
-ローカル実行
+# 起動
+docker-compose up --build
+ローカル環境
 bash
-# 1. 仮想環境作成
+# 仮想環境の作成と起動
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 2. 依存関係インストール
+# 依存パッケージのインストール
 pip install -r requirements.txt
 
-# 3. 環境変数設定
-cp .env.example .env
-# .envを編集
-
-# 4. アプリ起動
-uvicorn app.main:app --reload
-
-# 5. アクセス
-open http://localhost:8000
-📖 使い方
-基本的な使い方
-API設定: 初回起動時にGenAI Hub API KeyとURLを設定
-テキスト入力: 左上のテキストボックスに翻訳したいテキストを入力
-言語選択: ソース言語とターゲット言語を選択
-モデル選択: 使用するAIモデルを選択
-翻訳＆サマライズ: ボタンをクリックして実行
-PPTXに送る: サマリ結果をスライドに送信
-編集: 右側でスライドを編集・並び替え
-出力: Export PPTXボタンでダウンロード
-高度な使い方
-スライドの並び替え: スライドをドラッグ＆ドロップで移動
-スライドの編集: スライドを選択して右側のエディタで編集
-複数スライド作成: 異なるテキストを複数回翻訳してスライドに追加
-🔧 設定
+# アプリケーションの起動
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+使用方法
+ブラウザで http://localhost:8001 にアクセス
+初回起動時、API設定画面が表示されます
+GenAI Hub URLとAPIキーを入力
+「設定を保存」で.envファイルが自動生成されます
+メイン画面でモデルを選択し、翻訳・要約・PPTX生成を実行
 環境変数
+初回起動時の設定画面で自動的に.envファイルが生成されます。
+
+手動で設定する場合は、.env.exampleをコピーして編集してください：
+
+bash
+cp .env.example .env
+主な設定項目
 Export table
-変数名	説明	デフォルト値
-GENAI_HUB_API_KEY	GenAI Hub APIキー	-
-GENAI_HUB_API_URL	GenAI Hub API URL	-
-DEBUG	デバッグモード	false
-LOG_LEVEL	ログレベル	INFO
-MAX_BULLETS	最大箇条書き数	5
-API_TIMEOUT	APIタイムアウト（秒）	60
-サポート言語
-🇬🇧 English (en)
-🇯🇵 Japanese (ja)
-🇰🇷 Korean (ko)
-🇨🇳 Chinese (zh)
-🇫🇷 French (fr)
-🇩🇪 German (de)
-🇪🇸 Spanish (es)
-📁 プロジェクト構造
+変数名	説明	必須
+GENAI_API_KEY	GenAI Hub APIキー	✓
+GENAI_API_URL	GenAI Hub APIエンドポイントURL	✓
+LOG_LEVEL	ログレベル（INFO/DEBUG/WARNING/ERROR）	-
+MAX_BULLETS	要約時の最大箇条書き数	-
+開発
+テスト実行
+bash
+pytest
+コードフォーマット
+bash
+make format
+リント
+bash
+make lint
+プロジェクト構造
 TranSuDeck/
 ├── app/
-│   ├── main.py              # FastAPIメインアプリ
-│   ├── config.py            # 設定管理
-│   ├── core/
-│   │   ├── translator.py    # 翻訳機能
-│   │   ├── summarizer.py    # サマライズ機能
-│   │   └── pptx_generator.py # PPTX生成
-│   ├── models/
-│   │   └── slide.py         # データモデル
-│   └── static/
-│       ├── css/style.css
-│       ├── js/app.js
-│       └── index.html
-├── docker/
-│   ├── Dockerfile           # 本番用
-│   └── Dockerfile.dev       # 開発用
-├── outputs/                 # 生成されたPPTXファイル
-├── logs/                    # ログファイル
-└── tests/                   # テストファイル
-🧪 テスト
+│   ├── core/              # 翻訳・要約・PPTX生成機能
+│   ├── models/            # データモデル
+│   ├── utils/             # ユーティリティ
+│   ├── static/            # HTML/CSS/JS
+│   ├── config.py          # 設定
+│   └── main.py            # メインアプリ
+├── tests/                 # テスト
+├── docker/                # Dockerファイル
+├── outputs/               # 生成ファイル出力先
+├── logs/                  # ログ
+└── .env                   # 環境変数（自動生成）
+トラブルシューティング
+設定をリセットしたい
 bash
-# テスト実行
-pytest
+rm .env
+アプリを再起動すると、API設定画面が再表示されます。
 
-# カバレッジ付きテスト
-pytest --cov=app tests/
-
-# Dockerでテスト
-docker-compose -f docker-compose.dev.yml exec transudeck-dev pytest
-🐛 トラブルシューティング
-よくある問題
-API設定エラー
-
-API KeyとURLが正しく設定されているか確認
-API Keyの権限を確認
-モデルが読み込めない
-
-API URLが正しいフォーマットか確認
-ネットワーク接続を確認
-PPTX生成エラー
-
-python-pptxがインストールされているか確認
-ログファイルでエラー詳細を確認
-ログ確認
+ポートが使用中
 bash
-# アプリケーションログ
-tail -f logs/app.log
-
-# Dockerログ
-docker-compose logs -f
-🤝 コントリビューション
-Forkしてブランチを作成
-変更を実装
-テストを追加
-Pull Requestを作成
-📝 ライセンス
-MIT License
-
-👤 作者
-Your Name
-
-🙏 謝辞
-FastAPI
-python-pptx
-GenAI Hub
-EOF
+# 別のポートを使用
+uvicorn app.main:app --host 0.0.0.0 --port 8002
+モデルが表示されない
+API設定が正しいか確認
+ブラウザのコンソールでエラーを確認
+.envファイルの内容を確認
+セキュリティ注意事項
+.envファイルは絶対にGitにコミットしないでください
+APIキーは安全に管理してください
+本番環境ではHTTPSを使用してください
+ライセンス
+MIT License - 詳細は
+LICENSE
+ファイルを参照
