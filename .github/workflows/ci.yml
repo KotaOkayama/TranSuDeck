@@ -1,0 +1,423 @@
+name: TranSuDeck CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  lint:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort
+
+    - name: Lint with flake8
+      run: |
+        # Python syntax errors or undefined names
+        flake8 app/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # All errors as warnings
+        flake8 app/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Check formatting with black
+      run: |
+        black --check app/ tests/
+      continue-on-error: true
+
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only app/ tests/
+      continue-on-error: true
+
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Create necessary directories
+      run: |
+        mkdir -p uploads downloads logs outputs
+        chmod 777 uploads downloads logs outputs
+
+    - name: Create test environment file
+      run: |
+        cat > .env << EOF
+        GENAI_HUB_API_KEY=test_key_for_ci
+        GENAI_HUB_API_URL=https://api.test.example.com
+        DEBUG=true
+        LOG_LEVEL=debug
+        PYTHONUNBUFFERED=1
+        EOF
+
+    - name: Run tests with pytest
+      run: |
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html --cov-report=term
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-python-${{ matrix.python-version }}
+        fail_ci_if_error: false
+
+    - name: Archive test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-python-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          coverage.xml
+        retention-days: 30
+
+  docker-build:
+    name: Docker Build and Test
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      run: |
+        echo "🐳 Building Docker image..."
+        docker build -t transudeck:test -f docker/Dockerfile .
+        echo "✅ Docker image built successfully"
+        docker images | grep transudeck
+
+    - name: Create test environment
+      run: |
+        echo "📁 Creating test environment..."
+        mkdir -p uploads downloads logs outputs
+        chmod 777 uploads downloads logs outputs
+        
+        cat > .env.test << EOF
+        GENAI_HUB_API_KEY=test_key_for_ci
+        GENAI_HUB_API_URL=https://api.test.example.com
+        DEBUG=true
+        LOG_LEVEL=debug
+        PYTHONUNBUFFERED=1
+        EOF
+
+    - name: Start container
+      run: |
+        echo "🚀 Starting container..."
+        docker run --rm -d \
+          -p 8000:8000 \
+          --env-file .env.test \
+          -v "$(pwd)/uploads:/app/uploads" \
+          -v "$(pwd)/downloads:/app/downloads" \
+          -v "$(pwd)/logs:/app/logs" \
+          -v "$(pwd)/outputs:/app/outputs" \
+          --name transudeck-test \
+          transudeck:test
+        
+        echo "⏳ Waiting for container initialization..."
+        sleep 10
+
+    - name: Check container health
+      run: |
+        echo "🔍 Checking container status..."
+        docker ps -a
+        
+        echo "📋 Container logs:"
+        docker logs transudeck-test || true
+        
+        if ! docker ps | grep transudeck-test; then
+          echo "❌ Container stopped unexpectedly. Full logs:"
+          docker logs transudeck-test || true
+          exit 1
+        fi
+        
+        echo "✅ Container is running"
+
+    - name: Wait for application
+      run: |
+        echo "⏳ Waiting for application to be ready..."
+        for i in {1..30}; do
+          if curl -s http://localhost:8000/ > /dev/null; then
+            echo "✅ Application is ready!"
+            break
+          fi
+          if [ $i -eq 30 ]; then
+            echo "❌ Application failed to start within 60 seconds"
+            echo "Container logs:"
+            docker logs transudeck-test
+            exit 1
+          fi
+          echo "Attempt $i/30: Waiting..."
+          sleep 2
+        done
+
+    - name: Test endpoints
+      run: |
+        echo "🧪 Testing endpoints..."
+        
+        echo "Testing root endpoint..."
+        curl -f -v http://localhost:8000/ || exit 1
+        
+        echo "Testing config status endpoint..."
+        curl -f -v http://localhost:8000/api/config/status || exit 1
+        
+        echo "✅ All endpoint tests passed!"
+
+    - name: Cleanup
+      if: always()
+      run: |
+        echo "🧹 Cleaning up..."
+        docker stop transudeck-test || true
+        docker rm transudeck-test || true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [test, docker-build, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "📌 Latest tag: $LATEST_TAG"
+
+      - name: Determine version bump
+        id: version_bump
+        run: |
+          # PRタイトルとコミットメッセージの両方をチェック
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+          
+          # PRタイトルが存在する場合はそれを優先、なければコミットメッセージを使用
+          if [ -n "$PR_TITLE" ]; then
+            CHECK_TEXT="$PR_TITLE"
+            echo "📝 Checking PR title: $PR_TITLE"
+          else
+            CHECK_TEXT="$COMMIT_MSG"
+            echo "📝 Checking commit message: $COMMIT_MSG"
+          fi
+          
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+          
+          # [major], [minor], [patch] のいずれかをチェック
+          if [[ $CHECK_TEXT =~ \[major\] ]] || [[ $CHECK_TEXT =~ \[MAJOR\] ]]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            BUMP_TYPE="Major Version"
+            echo "🚀 Major version bump detected"
+          elif [[ $CHECK_TEXT =~ \[minor\] ]] || [[ $CHECK_TEXT =~ \[MINOR\] ]]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            BUMP_TYPE="Minor Version"
+            echo "📦 Minor version bump detected"
+          elif [[ $CHECK_TEXT =~ \[patch\] ]] || [[ $CHECK_TEXT =~ \[PATCH\] ]]; then
+            PATCH=$((PATCH + 1))
+            BUMP_TYPE="Patch Version"
+            echo "🔧 Patch version bump detected"
+          else
+            # デフォルトはパッチバージョンアップ
+            PATCH=$((PATCH + 1))
+            BUMP_TYPE="Patch Version"
+            echo "🔧 Default patch version bump"
+          fi
+          
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "version=$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
+          echo "🎉 New version: $NEW_TAG ($BUMP_TYPE)"
+
+      - name: Create and push tag
+        run: |
+          NEW_TAG="${{ steps.version_bump.outputs.new_tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a $NEW_TAG -m "Release $NEW_TAG"
+          git push origin $NEW_TAG
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+          NEW_TAG="${{ steps.version_bump.outputs.new_tag }}"
+          
+          echo "Generating changelog from $LATEST_TAG to $NEW_TAG"
+          
+          # Get commit messages since last tag
+          CHANGELOG=$(git log $LATEST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          
+          # Save to file for multiline output
+          cat > changelog.txt << EOF
+          $CHANGELOG
+          EOF
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat changelog.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version_bump.outputs.new_tag }}
+          release_name: TranSuDeck ${{ steps.version_bump.outputs.new_tag }}
+          body: |
+            ## 🚀 ${{ steps.version_bump.outputs.bump_type }} Release
+            
+            ### 📝 What's Changed
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 🔗 Links
+            - **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_tag.outputs.latest_tag }}...${{ steps.version_bump.outputs.new_tag }}
+            - **Documentation**: https://github.com/${{ github.repository }}/blob/main/README.md
+            
+            ### 📦 Docker Image
+            Pull the latest image:
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version_bump.outputs.version }}
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ```
+            
+            Run with Docker:
+            ```bash
+            docker run -d -p 8000:8000 \
+              -e GENAI_HUB_API_KEY=your_key \
+              -e GENAI_HUB_API_URL=your_url \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ```
+            
+            ### 🎯 Features
+            - 🌐 Multi-language translation via GenAI Hub
+            - 📝 Automatic text summarization
+            - 📊 PowerPoint (PPTX) generation
+            - 🎨 Modern 2-column UI
+            - 🔧 Easy configuration via web interface
+          draft: false
+          prerelease: false
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.version_bump.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version_bump.outputs.version }}
+            type=semver,pattern={{major}},value=${{ steps.version_bump.outputs.version }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.version_bump.outputs.version }}
+

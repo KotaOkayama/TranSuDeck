@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  transudeck-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: transudeck-dev
+    ports:
+      - "8001:8000"
+    environment:
+      - GENAI_HUB_API_KEY=${GENAI_HUB_API_KEY}
+      - GENAI_HUB_API_URL=${GENAI_HUB_API_URL}
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    restart: unless-stopped

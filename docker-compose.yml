@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  transudeck:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: transudeck
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+      # .env ファイルのマウントを削除（コンテナ内で作成させる）
+    environment:
+      - GENAI_API_KEY=${GENAI_API_KEY:-}
+      - GENAI_API_URL=${GENAI_API_URL:-}
+    restart: unless-stopped
+    networks:
+      - transudeck-network
+
+networks:
+  transudeck-network:
+    driver: bridge

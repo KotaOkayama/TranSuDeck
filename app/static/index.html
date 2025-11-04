@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TranSuDeck - Translate + Summarize + Deck</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Header -->
+    <div class="container">
+        <header class="header">
+            <div class="header-title">
+                <h1>TranSuDeck</h1>
+                <p class="subtitle">Translate + Summarize + Deck</p>
+            </div>
+            <div class="header-controls">
+                <div class="model-selector">
+                    <label for="ai-model">AI Model:</label>
+                    <select id="ai-model">
+                        <option value="">Loading models...</option>
+                    </select>
+                </div>
+                <button id="settings-btn" class="btn btn-icon">⚙️ Settings</button>
+            </div>
+        </header>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="main-content">
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <!-- Input Section -->
+                <div class="panel-section input-section">
+                    <h2>Input</h2>
+                    
+                    <div class="form-group">
+                        <label for="source-text">Source Text:</label>
+                        <textarea id="source-text" placeholder="Enter text to translate and summarize..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional-instructions">Additional Instructions (Optional):</label>
+                        <textarea id="additional-instructions" rows="3" placeholder="Add specific requirements..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="source-language">Source Language:</label>
+                            <select id="source-language">
+                                <option value="English">English</option>
+                                <option value="Japanese">Japanese</option>
+                                <option value="Chinese">Chinese</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
+                                <option value="Korean">Korean</option>
+                                <option value="Portuguese">Portuguese</option>
+                                <option value="Russian">Russian</option>
+                                <option value="Arabic">Arabic</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="target-language">Target Language:</label>
+                            <select id="target-language">
+                                <option value="Japanese">Japanese</option>
+                                <option value="English">English</option>
+                                <option value="Chinese">Chinese</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
+                                <option value="Korean">Korean</option>
+                                <option value="Portuguese">Portuguese</option>
+                                <option value="Russian">Russian</option>
+                                <option value="Arabic">Arabic</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="num-slides">Number of Slides:</label>
+                            <input type="number" id="num-slides" value="3" min="1" max="20">
+                        </div>
+                    </div>
+
+                    <button id="translate-summarize-btn" class="btn btn-primary btn-large">
+                        🚀 Translate & Summarize
+                    </button>
+
+                    <button id="clear-all-btn" class="btn btn-secondary btn-large">
+                        🗑️ Clear
+                    </button>
+                </div>
+
+                <!-- Translation & Summary Section -->
+                <div class="panel-section">
+                    <h2>Translation & Summary</h2>
+                    
+                    <div class="translation-summary-container">
+                        <div class="translation-section">
+                            <h3>Translation</h3>
+                            <textarea id="translated-text" readonly></textarea>
+                        </div>
+
+                        <div class="summary-section">
+                            <h3>Summary</h3>
+                            <div id="summary-display" class="summary-markdown-display">
+                                <p class="placeholder-text">Summary will appear here...</p>
+                            </div>
+                            
+                            <div class="summary-actions">
+                                <button id="send-to-pptx-btn" class="btn btn-success">
+                                    📤 Send to Editor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Slide Editor Section -->
+                <div class="panel-section">
+                    <h2>Slide Editor</h2>
+                    
+                    <div class="slide-controls">
+                        <button id="add-slide-btn" class="btn btn-secondary">
+                            ➕ Add Slide
+                        </button>
+                        <button id="delete-slide-btn" class="btn btn-danger">
+                            🗑️ Delete Slide
+                        </button>
+                    </div>
+
+                    <div class="slides-container">
+                        <div id="slides-preview" class="slides-preview">
+                            <!-- Slide previews will be inserted here -->
+                        </div>
+
+                        <div class="slide-editor">
+                            <h3>Slide Content (Markdown):</h3>
+                            <div class="markdown-toolbar">
+                                <button class="toolbar-btn" data-action="h1" title="Heading 1">
+                                    H1
+                                </button>
+                                <button class="toolbar-btn" data-action="h2" title="Heading 2">
+                                    H2
+                                </button>
+                                <button class="toolbar-btn" data-action="h3" title="Heading 3">
+                                    H3
+                                </button>
+                                <div class="toolbar-separator"></div>
+                                <button class="toolbar-btn" data-action="bold" title="Bold">
+                                    <strong>B</strong>
+                                </button>
+                                <button class="toolbar-btn" data-action="italic" title="Italic">
+                                    <em>I</em>
+                                </button>
+                                <button class="toolbar-btn" data-action="underline" title="Underline">
+                                    <u>U</u>
+                                </button>
+                                <button class="toolbar-btn" data-action="strikethrough" title="Strikethrough">
+                                    <s>S</s>
+                                </button>
+                                <div class="toolbar-separator"></div>
+                                <button class="toolbar-btn" data-action="ul" title="Bullet List">
+                                    • List
+                                </button>
+                                <button class="toolbar-btn" data-action="ol" title="Numbered List">
+                                    1. List
+                                </button>
+                            </div>
+                            <textarea id="slide-content" placeholder="Select a slide to edit..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="slide-preview-large-container">
+                        <h3>Slide Preview:</h3>
+                        <div id="slide-preview-large" class="slide-preview-large">
+                            <div class="placeholder-text">Select a slide to preview</div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="generate-pptx-btn" class="btn btn-primary btn-large">
+                            📊 Generate PPTX
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="api-key">API Key:</label>
+                    <input type="password" id="api-key" placeholder="Enter your API key" required>
+                </div>
+                <div class="form-group">
+                    <label for="api-url">API URL:</label>
+                    <input type="text" id="api-url" placeholder="https://api.example.com" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-settings" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
