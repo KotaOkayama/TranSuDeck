@@ -12,7 +12,7 @@ TranSuDeck is a web application that leverages GenAI Hub to perform text transla
 ![API Settings Screen](images/API.png)
 
 ### Main UI Screen
-![Main UI Screen](images/UI1.png)
+![Main UI Screen](images/UI.png)
 
 ## Features
 
