@@ -47,11 +47,13 @@ TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPo
 ### GitHub Container Registry からのイメージ利用
 
 1. Dockerイメージのプル:
+```bash
    docker pull ghcr.io/kotaokayama/transudeck:latest
-
+```
 2. コンテナの起動:
+```bash
    docker run -d -p 8001:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
-
+```
    - アプリケーションにアクセスするポートを変更する場合は左側のポート番号（ホスト側）のみを変更してください
    - 例: -p 8080:8001 でポート8080でアクセス可能
 
@@ -60,13 +62,19 @@ TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPo
    - 初回起動時にAPI キーとAPI URLを設定
 
 4. コンテナの停止:
+```bash
    docker stop transudeck
+```
 
 5. コンテナの起動（2回目以降）:
+```bash
    docker start transudeck
+```
 
 6. コンテナの削除:
+```bash
    docker rm transudeck
+```
 
    注意: コンテナを削除すると、設定と生成ファイルも削除されます
 
@@ -75,29 +83,42 @@ TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPo
 ### Dockerを使用
 
 リポジトリのクローン:
+```bash
 git clone <repository-url>
 cd TranSuDeck
+```
 
 起動:
+```bash
 docker-compose up -d --build
+```
 
 ログ確認:
+
+```bash
 docker-compose logs -f
+```
 
 ブラウザで http://localhost:8001 にアクセス
 
 ### ローカル環境
 
 仮想環境の作成と起動:
+```bash
 python -m venv venv
 source venv/bin/activate
 Windows の場合: venv\Scripts\activate
+```
 
 依存パッケージのインストール:
+```bash
 pip install -r requirements.txt
+```
 
 アプリケーションの起動:
+```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+```
 
 ## 使用方法
 
@@ -127,27 +148,57 @@ Docker環境では /app/config/.env に、ローカル環境では .env に保�
 
 TranSuDeck/
 ├── app/
-│   ├── core/              # 翻訳・要約・PPTX生成機能
-│   ├── models/            # データモデル
-│   ├── utils/             # ユーティリティ
-│   ├── static/            # HTML/CSS/JS
-│   ├── config.py          # 設定
-│   └── main.py            # メインアプリ
-├── tests/                 # テスト
-├── docker/                # Dockerファイル
-├── outputs/               # 生成ファイル出力先
-├── logs/                  # ログ
-└── docker-compose.yml     # Docker設定
+│ ├── core/ # 翻訳・要約・PPTX生成機能
+│ │ ├── init.py
+│ │ ├── translator.py
+│ │ ├── summarizer.py
+│ │ └── pptx_generator.py
+│ ├── models/ # データモデル
+│ │ ├── init.py
+│ │ └── slide.py
+│ ├── utils/ # ユーティリティ
+│ │ ├── init.py
+│ │ └── helpers.py
+│ ├── static/ # HTML/CSS/JS
+│ │ ├── index.html
+│ │ ├── css/
+│ │ │ └── style.css
+│ │ └── js/
+│ │ └── app.js
+│ ├── config.py # 設定
+│ └── main.py # メインアプリ
+├── tests/ # テスト
+│ ├── init.py
+│ └── test_main.py
+├── docker/ # Dockerファイル
+│ ├── Dockerfile
+│ └── Dockerfile.dev
+├── outputs/ # 生成ファイル出力先
+├── logs/ # ログ
+├── .github/
+│ └── workflows/
+│ └── ci.yml # CI/CD設定
+├── docker-compose.yml # Docker設定
+├── requirements.txt # 依存パッケージ
+├── requirements-dev.txt # 開発用パッケージ
+├── .env.example # 環境変数サンプル
+├── .gitignore
+├── README.md
+└── README_EN.md
 
 ## 🧪 テスト
 
 ### テストの実行
 
 すべてのテストを実行:
+```bash
 make test
+```
 
 または:
+```bash
 pytest
+```
 
 ## トラブルシューティング
 
@@ -165,22 +216,30 @@ pytest
 
 3. ポートが使用中:
    別のポートを使用:
+```bash
    docker run -d -p 8080:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
+```
 
 ### 設定をリセットしたい
 
 Docker環境（GitHub Container Registry）:
 コンテナを削除して再起動:
+```bash
 docker stop transudeck
 docker rm transudeck
 docker run -d -p 8001:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
+```
 
 Docker環境（docker-compose）:
+```bash
 docker-compose down --volumes
 docker-compose up -d
+```
 
 ローカル環境:
+```bash
 rm .env
+```
 
 アプリを再起動すると、API設定画面が再表示されます。
 
@@ -192,9 +251,11 @@ rm .env
 
 ### 完全リセット（docker-compose）
 
+```bash
 docker-compose down --rmi all --volumes --remove-orphans
 docker-compose build --no-cache
 docker-compose up -d
+```
 
 ## セキュリティ注意事項
 

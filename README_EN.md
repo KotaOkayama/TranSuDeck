@@ -47,10 +47,14 @@ TranSuDeck is a web application that leverages GenAI Hub to perform text transla
 ### Using Image from GitHub Container Registry
 
 1. Pull Docker image:
+```bash
    docker pull ghcr.io/kotaokayama/transudeck:latest
+```
 
 2. Start container:
+```bash
    docker run -d -p 8001:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
+```
 
    - To change the access port, modify only the left port number (host side)
    - Example: -p 8080:8001 to access via port 8080
@@ -60,13 +64,19 @@ TranSuDeck is a web application that leverages GenAI Hub to perform text transla
    - Configure API Key and API URL on first launch
 
 4. Stop container:
+```bash
    docker stop transudeck
+```
 
 5. Start container (subsequent launches):
+```bash
    docker start transudeck
+```
 
 6. Remove container:
+```bash
    docker rm transudeck
+```
 
    Note: Removing the container will also delete settings and generated files
 
@@ -75,29 +85,41 @@ TranSuDeck is a web application that leverages GenAI Hub to perform text transla
 ### Using Docker
 
 Clone repository:
+```bash
 git clone <repository-url>
 cd TranSuDeck
+```
 
 Start:
+```bash
 docker-compose up -d --build
+```
 
 Check logs:
+```bash
 docker-compose logs -f
+```
 
 Access http://localhost:8001 in your browser
 
 ### Local Environment
 
 Create and activate virtual environment:
+```bash
 python -m venv venv
 source venv/bin/activate
 For Windows: venv\Scripts\activate
+```
 
 Install dependencies:
+```bash
 pip install -r requirements.txt
+```
 
 Start application:
+```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+```
 
 ## Usage
 
@@ -127,27 +149,57 @@ In Docker environment, saved to /app/config/.env, in local environment to .env
 
 TranSuDeck/
 ├── app/
-│   ├── core/              # Translation, summarization, PPTX generation
-│   ├── models/            # Data models
-│   ├── utils/             # Utilities
-│   ├── static/            # HTML/CSS/JS
-│   ├── config.py          # Configuration
-│   └── main.py            # Main application
-├── tests/                 # Tests
-├── docker/                # Docker files
-├── outputs/               # Generated files output
-├── logs/                  # Logs
-└── docker-compose.yml     # Docker configuration
+│ ├── core/ # Translation, Summarization, PPTX generation
+│ │ ├── init.py
+│ │ ├── translator.py
+│ │ ├── summarizer.py
+│ │ └── pptx_generator.py
+│ ├── models/ # Data models
+│ │ ├── init.py
+│ │ └── slide.py
+│ ├── utils/ # Utilities
+│ │ ├── init.py
+│ │ └── helpers.py
+│ ├── static/ # HTML/CSS/JS
+│ │ ├── index.html
+│ │ ├── css/
+│ │ │ └── style.css
+│ │ └── js/
+│ │ └── app.js
+│ ├── config.py # Configuration
+│ └── main.py # Main application
+├── tests/ # Tests
+│ ├── init.py
+│ └── test_main.py
+├── docker/ # Docker files
+│ ├── Dockerfile
+│ └── Dockerfile.dev
+├── outputs/ # Generated files output
+├── logs/ # Logs
+├── .github/
+│ └── workflows/
+│ └── ci.yml # CI/CD configuration
+├── docker-compose.yml # Docker configuration
+├── requirements.txt # Dependencies
+├── requirements-dev.txt # Development dependencies
+├── .env.example # Environment variables example
+├── .gitignore
+├── README.md
+└── README_EN.md
 
 ## 🧪 Testing
 
 ### Run Tests
 
 Run all tests:
+```bash
 make test
+```
 
 Or:
+```bash
 pytest
+```
 
 ## Troubleshooting
 
@@ -171,16 +223,22 @@ pytest
 
 Docker environment (GitHub Container Registry):
 Remove and restart container:
+```bash
 docker stop transudeck
 docker rm transudeck
 docker run -d -p 8001:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
+```
 
 Docker environment (docker-compose):
+```bash
 docker-compose down --volumes
 docker-compose up -d
+```
 
 Local environment:
+```bash
 rm .env
+```
 
 After restarting the app, the API settings screen will be displayed again.
 
@@ -192,9 +250,11 @@ After restarting the app, the API settings screen will be displayed again.
 
 ### Complete Reset (docker-compose)
 
+```bash
 docker-compose down --rmi all --volumes --remove-orphans
 docker-compose build --no-cache
 docker-compose up -d
+```
 
 ## Security Notes
 
