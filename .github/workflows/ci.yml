@@ -274,7 +274,14 @@ jobs:
       - name: Get latest tag
         id: get_tag
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # タグが存在するか確認
+          if git describe --tags --abbrev=0 2>/dev/null; then
+            LATEST_TAG=$(git describe --tags --abbrev=0)
+            echo "is_first_release=false" >> $GITHUB_OUTPUT
+          else
+            LATEST_TAG="v0.0.0"
+            echo "is_first_release=true" >> $GITHUB_OUTPUT
+          fi
           echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
           echo "📌 Latest tag: $LATEST_TAG"
 
@@ -285,6 +292,7 @@ jobs:
           COMMIT_MSG="${{ github.event.head_commit.message }}"
           PR_TITLE="${{ github.event.pull_request.title }}"
           LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+          IS_FIRST_RELEASE="${{ steps.get_tag.outputs.is_first_release }}"
           
           # PRタイトルが存在する場合はそれを優先、なければコミットメッセージを使用
           if [ -n "$PR_TITLE" ]; then
@@ -302,8 +310,15 @@ jobs:
           MINOR=${MINOR:-0}
           PATCH=${PATCH:-0}
           
+          # 初回リリースの場合
+          if [ "$IS_FIRST_RELEASE" = "true" ]; then
+            MAJOR=0
+            MINOR=1
+            PATCH=0
+            BUMP_TYPE="Initial Release"
+            echo "🎉 Initial release detected"
           # [major], [minor], [patch] のいずれかをチェック
-          if [[ $CHECK_TEXT =~ \[major\] ]] || [[ $CHECK_TEXT =~ \[MAJOR\] ]]; then
+          elif [[ $CHECK_TEXT =~ \[major\] ]] || [[ $CHECK_TEXT =~ \[MAJOR\] ]]; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
@@ -344,11 +359,23 @@ jobs:
         run: |
           LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
           NEW_TAG="${{ steps.version_bump.outputs.new_tag }}"
+          IS_FIRST_RELEASE="${{ steps.get_tag.outputs.is_first_release }}"
           
           echo "Generating changelog from $LATEST_TAG to $NEW_TAG"
           
-          # Get commit messages since last tag
-          CHANGELOG=$(git log $LATEST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          # 初回リリースの場合は全コミットを取得
+          if [ "$IS_FIRST_RELEASE" = "true" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges | head -20)
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="- Initial release"
+            fi
+          else
+            # 前回のタグからの変更を取得
+            CHANGELOG=$(git log $LATEST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            if [ -z "$CHANGELOG" ]; then
+              CHANGELOG="- Minor updates and improvements"
+            fi
+          fi
           
           # Save to file for multiline output
           cat > changelog.txt << EOF
@@ -369,7 +396,6 @@ jobs:
           ${{ steps.changelog.outputs.changelog }}
           
           ### 🔗 Links
-          - **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_tag.outputs.latest_tag }}...${{ steps.version_bump.outputs.new_tag }}
           - **Documentation**: https://github.com/${{ github.repository }}/blob/main/README.md
           
           ### 📦 Docker Image

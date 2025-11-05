@@ -12,7 +12,7 @@ TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPo
 ![API設定画面](images/API.png)
 
 ### メインUI画面
-![メインUI画面](images/UI1.png)
+![メインUI画面](images/UI.png)
 
 ## 機能
 
