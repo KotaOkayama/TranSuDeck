@@ -1323,3 +1323,169 @@ body {
         box-shadow: none;
     }
 }
+/* ===========================
+   PPTX Generation Rules (Collapsible)
+   =========================== */
+.rules-container {
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+    background: white;
+}
+
+.rules-toggle {
+    width: 100%;
+    padding: 10px 15px;
+    background: var(--light-gray);
+    border: none;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rules-toggle:hover {
+    background: #dfe4ea;
+}
+
+#rulesToggleIcon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    font-size: 10px;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+#rulesToggleIcon.expanded {
+    transform: rotate(90deg);
+}
+
+.rules-content {
+    padding: 15px;
+    background: #fafbfc;
+    border-top: 1px solid var(--border-color);
+    display: none;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.rules-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.rules-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.rules-section h4 {
+    color: var(--primary-color);
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.rules-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.rules-section ul li {
+    padding: 4px 0;
+    padding-left: 18px;
+    position: relative;
+    line-height: 1.6;
+    font-size: 13px;
+    color: #495057;
+}
+
+.rules-section ul li:before {
+    content: "•";
+    color: var(--primary-color);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+    font-size: 14px;
+}
+
+.rules-section code {
+    background: #f1f3f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', Monaco, monospace;
+    font-size: 12px;
+    color: #e83e8c;
+    border: 1px solid #e9ecef;
+    font-weight: 500;
+}
+
+.rules-section pre {
+    background: #f8f9fa;
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    margin-top: 6px;
+    margin-bottom: 0;
+    font-size: 11px;
+    overflow-x: auto;
+    line-height: 1.4;
+}
+
+.rules-section pre code {
+    background: none;
+    padding: 0;
+    border: none;
+    color: #495057;
+}
+
+.rules-section strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.rules-section em {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.rules-section u {
+    color: #6c757d;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments for rules */
+@media (max-width: 768px) {
+    .rules-content {
+        padding: 12px;
+        max-height: 300px;
+    }
+    
+    .rules-section h4 {
+        font-size: 13px;
+    }
+    
+    .rules-section ul li {
+        font-size: 12px;
+        padding-left: 16px;
+    }
+    
+    .rules-section code {
+        font-size: 11px;
+        padding: 1px 4px;
+    }
+    
+    .rules-section pre {
+        font-size: 10px;
+        padding: 6px 8px;
+    }
+}

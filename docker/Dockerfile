@@ -2,26 +2,27 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including make
 RUN apt-get update && apt-get install -y \
+    make \
     gcc \
-    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt .
-
-# Install Python dependencies
+# Copy requirements first for better caching
+COPY requirements.txt requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Copy application code
-COPY . .
+COPY app/ ./app/
+COPY tests/ ./tests/
+COPY pytest.ini ./
+COPY Makefile ./
 
 # Create necessary directories
-RUN mkdir -p logs outputs
+RUN mkdir -p /app/config /app/outputs /app/logs
 
-# Expose port
+# ポート8001を公開
 EXPOSE 8001
 
-# Run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]

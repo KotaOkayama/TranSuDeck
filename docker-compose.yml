@@ -1,24 +1,28 @@
-version: '3.8'
-
 services:
   transudeck:
+    container_name: transudeck
     build:
       context: .
       dockerfile: docker/Dockerfile
-    container_name: transudeck
     ports:
       - "8001:8001"
     volumes:
+      # アプリケーションコードのマウント（開発用）
+      - ./app:/app/app
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini
+      - ./Makefile:/app/Makefile
       - ./outputs:/app/outputs
-      - ./logs:/app/logs
-      # .env ファイルのマウントを削除（コンテナ内で作成させる）
+      # 設定ファイル用の名前付きボリューム
+      - transudeck_config:/app/config
+      # キャッシュディレクトリを除外
+      - /app/__pycache__
     environment:
-      - GENAI_API_KEY=${GENAI_API_KEY:-}
-      - GENAI_API_URL=${GENAI_API_URL:-}
+      - PYTHONUNBUFFERED=1
+      - CONFIG_DIR=/app/config
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001
     restart: unless-stopped
-    networks:
-      - transudeck-network
 
-networks:
-  transudeck-network:
-    driver: bridge
+volumes:
+  transudeck_config:
+    driver: local

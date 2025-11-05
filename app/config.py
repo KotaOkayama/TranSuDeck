@@ -2,10 +2,26 @@ import os
 from typing import Optional, List, Dict
 import httpx
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from pathlib import Path
+
+# 設定ディレクトリのパス（環境変数から取得、デフォルトはカレントディレクトリ）
+CONFIG_DIR = os.getenv('CONFIG_DIR', '.')
+CONFIG_PATH = Path(CONFIG_DIR)
+CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+
+# .envファイルのパス
+ENV_FILE_PATH = CONFIG_PATH / '.env'
 
 class Settings(BaseSettings):
     """Application settings"""
+    
+    # Pydantic V2 configuration
+    model_config = ConfigDict(
+        env_file=str(ENV_FILE_PATH),
+        case_sensitive=False,
+        extra="allow"
+    )
     
     # Application
     APP_NAME: str = "TranSuDeck"
@@ -18,12 +34,7 @@ class Settings(BaseSettings):
     BASE_DIR: Path = Path(__file__).parent.parent
     OUTPUT_DIR: Path = BASE_DIR / "outputs"
     LOG_DIR: Path = BASE_DIR / "logs"
-    ENV_FILE: Path = BASE_DIR / ".env"
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-        extra = "allow"
+    ENV_FILE: Path = ENV_FILE_PATH
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -37,11 +48,11 @@ settings = Settings()
 def load_env_config():
     """Load configuration from .env file"""
     global settings
-    if settings.ENV_FILE.exists():
+    if ENV_FILE_PATH.exists():
         try:
             # Read .env file manually to ensure it's loaded
             env_vars = {}
-            with open(settings.ENV_FILE, 'r') as f:
+            with open(ENV_FILE_PATH, 'r') as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith('#') and '=' in line:
@@ -70,10 +81,11 @@ def save_env_config(api_key: str, api_url: str) -> bool:
         env_content = f"""GENAI_API_KEY={api_key}
 GENAI_API_URL={api_url}
 """
-        with open(settings.ENV_FILE, "w") as f:
+        with open(ENV_FILE_PATH, "w") as f:
             f.write(env_content)
         
-        print(f"Saved to .env file: API Key length={len(api_key)}, API URL={api_url}")
+        print(f"Saved to .env file: {ENV_FILE_PATH}")
+        print(f"API Key length={len(api_key)}, API URL={api_url}")
         
         # Update settings directly
         settings.GENAI_API_KEY = api_key
@@ -82,7 +94,7 @@ GENAI_API_URL={api_url}
         print(f"Settings updated directly - API Key: {settings.GENAI_API_KEY is not None}, API URL: {settings.GENAI_API_URL}")
         
         # Verify by reading back
-        with open(settings.ENV_FILE, 'r') as f:
+        with open(ENV_FILE_PATH, 'r') as f:
             content = f.read()
             print(f".env file content:\n{content}")
         

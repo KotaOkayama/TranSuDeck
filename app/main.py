@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
+from contextlib import asynccontextmanager
 import os
 import logging
 from datetime import datetime
@@ -34,7 +35,39 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title=settings.APP_NAME)
+# Global instances
+translator: Optional[Translator] = None
+summarizer: Optional[Summarizer] = None
+pptx_generator = PPTXGenerator()
+
+# Initialize translator and summarizer if configured
+def initialize_services():
+    global translator, summarizer
+    if is_configured():
+        try:
+            translator = Translator(settings.GENAI_API_URL, settings.GENAI_API_KEY)
+            summarizer = Summarizer(settings.GENAI_API_URL, settings.GENAI_API_KEY)
+            logger.info("Services initialized successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Error initializing services: {str(e)}")
+            return False
+    return False
+
+# Lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting TranSuDeck application...")
+    load_env_config()
+    initialize_services()
+    logger.info(f"Application started. Configured: {is_configured()}")
+    yield
+    # Shutdown
+    logger.info("Shutting down TranSuDeck application...")
+
+# FastAPI application
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 # CORS middleware
 app.add_middleware(
@@ -77,32 +110,6 @@ class ModelInfo(BaseModel):
 class ModelListResponse(BaseModel):
     models: List[ModelInfo]
     count: int
-
-# Global instances
-translator: Optional[Translator] = None
-summarizer: Optional[Summarizer] = None
-pptx_generator = PPTXGenerator()
-
-# Initialize translator and summarizer if configured
-def initialize_services():
-    global translator, summarizer
-    if is_configured():
-        try:
-            translator = Translator(settings.GENAI_API_URL, settings.GENAI_API_KEY)
-            summarizer = Summarizer(settings.GENAI_API_URL, settings.GENAI_API_KEY)
-            logger.info("Services initialized successfully")
-            return True
-        except Exception as e:
-            logger.error(f"Error initializing services: {str(e)}")
-            return False
-    return False
-
-# Load config and initialize on startup
-@app.on_event("startup")
-async def startup_event():
-    load_env_config()
-    initialize_services()
-    logger.info(f"Application started. Configured: {is_configured()}")
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -176,7 +183,6 @@ async def get_config_status():
         "has_env_file": Path(settings.ENV_FILE).exists(),
         "api_url_set": settings.GENAI_API_URL is not None and settings.GENAI_API_URL != ""
     }
-
 
 @app.get("/api/models", response_model=ModelListResponse)
 async def get_models():
@@ -270,7 +276,7 @@ async def translate_and_summarize(request: TranslateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/pptx/generate")
-async def generate_pptx(request: PPTXRequest):
+async def generate_pptx_endpoint(request: PPTXRequest):
     """Generate PPTX file from slides"""
     try:
         # Convert request data to Slide objects
@@ -309,6 +315,14 @@ async def download_pptx(filename: str):
         media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
         filename=filename
     )
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "configured": is_configured()
+    }
 
 if __name__ == "__main__":
     import uvicorn

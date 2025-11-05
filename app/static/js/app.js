@@ -371,6 +371,24 @@ function applyMarkdownFormat(action) {
                 return;
             }
             break;
+
+        case 'h4':
+            if (isLineStart && selectedText) {
+                newText = `#### ${selectedText}`;
+                newCursorPos = start + newText.length;
+            } else if (isLineStart) {
+                newText = '#### ';
+                newCursorPos = start + 5;
+            } else {
+                const lineContent = beforeText.substring(lineStart);
+                textarea.value = beforeText.substring(0, lineStart) + '#### ' + lineContent + selectedText + afterText;
+                newCursorPos = lineStart + 5 + lineContent.length + selectedText.length;
+                textarea.setSelectionRange(newCursorPos, newCursorPos);
+                textarea.focus();
+                textarea.dispatchEvent(new Event('input'));
+                return;
+            }
+            break;
             
         case 'bold':
             if (selectedText) {
@@ -1084,5 +1102,29 @@ function updateLargePreview() {
         previewLarge.innerHTML = marked.parse(slide.content);
     } else {
         previewLarge.innerHTML = `<pre>${slide.content}</pre>`;
+    }
+}
+// 既存のコードはすべて維持
+
+/**
+ * PPTX生成ルールの表示/非表示を切り替え
+ */
+function toggleRules() {
+    const rulesContent = document.getElementById('rulesContent');
+    const toggleIcon = document.getElementById('rulesToggleIcon');
+    
+    if (!rulesContent || !toggleIcon) {
+        console.error('Rules elements not found');
+        return;
+    }
+    
+    if (rulesContent.style.display === 'none' || rulesContent.style.display === '') {
+        rulesContent.style.display = 'block';
+        toggleIcon.textContent = '▼';
+        toggleIcon.classList.add('expanded');
+    } else {
+        rulesContent.style.display = 'none';
+        toggleIcon.textContent = '▶';
+        toggleIcon.classList.remove('expanded');
     }
 }

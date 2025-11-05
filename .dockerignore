@@ -23,7 +23,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Environment
+# Environment（コンテナ内で管理）
 .env
 .env.local
 .env.*.local
@@ -39,11 +39,11 @@ wheels/
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs（ボリュームで管理）
 logs/
 *.log
 
-# Outputs
+# Outputs（ボリュームで管理）
 outputs/
 *.pptx
 
@@ -60,3 +60,8 @@ htmlcov/
 Dockerfile
 docker-compose*.yml
 .dockerignore
+
+# Development files
+*.backup
+*.bak
+*.tmp
