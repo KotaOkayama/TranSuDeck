@@ -341,45 +341,41 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        run: |
+          gh release create ${{ steps.version_bump.outputs.new_tag }} \
+            --title "TranSuDeck ${{ steps.version_bump.outputs.new_tag }}" \
+            --notes "## 🚀 ${{ steps.version_bump.outputs.bump_type }} Release
+          
+          ### 📝 What's Changed
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ### 🔗 Links
+          - **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_tag.outputs.latest_tag }}...${{ steps.version_bump.outputs.new_tag }}
+          - **Documentation**: https://github.com/${{ github.repository }}/blob/main/README.md
+          
+          ### 📦 Docker Image
+          Pull the latest image:
+          \`\`\`bash
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version_bump.outputs.version }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          \`\`\`
+          
+          Run with Docker:
+          \`\`\`bash
+          docker run -d -p 8000:8000 \\
+            -e GENAI_HUB_API_KEY=your_key \\
+            -e GENAI_HUB_API_URL=your_url \\
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          \`\`\`
+          
+          ### 🎯 Features
+          - 🌐 Multi-language translation via GenAI Hub
+          - 📝 Automatic text summarization
+          - 📊 PowerPoint (PPTX) generation
+          - 🎨 Modern 2-column UI
+          - 🔧 Easy configuration via web interface"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version_bump.outputs.new_tag }}
-          name: TranSuDeck ${{ steps.version_bump.outputs.new_tag }}
-          body: |
-            ## 🚀 ${{ steps.version_bump.outputs.bump_type }} Release
-            
-            ### 📝 What's Changed
-            ${{ steps.changelog.outputs.changelog }}
-            
-            ### 🔗 Links
-            - **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_tag.outputs.latest_tag }}...${{ steps.version_bump.outputs.new_tag }}
-            - **Documentation**: https://github.com/${{ github.repository }}/blob/main/README.md
-            
-            ### 📦 Docker Image
-            Pull the latest image:
-            ```bash
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version_bump.outputs.version }}
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ```
-            
-            Run with Docker:
-            ```bash
-            docker run -d -p 8000:8000 \
-              -e GENAI_HUB_API_KEY=your_key \
-              -e GENAI_HUB_API_URL=your_url \
-              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ```
-            
-            ### 🎯 Features
-            - 🌐 Multi-language translation via GenAI Hub
-            - 📝 Automatic text summarization
-            - 📊 PowerPoint (PPTX) generation
-            - 🎨 Modern 2-column UI
-            - 🔧 Easy configuration via web interface
-          draft: false
-          prerelease: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
