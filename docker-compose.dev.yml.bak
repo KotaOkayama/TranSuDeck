@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  transudeck-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: transudeck-dev
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+      - /app/__pycache__
+      - /app/.pytest_cache
+      # .env はコンテナ内で作成されるため、マウント不要
+    environment:
+      - GENAI_API_KEY=${GENAI_API_KEY:-}
+      - GENAI_API_URL=${GENAI_API_URL:-}
+      - DEBUG=True
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+    restart: unless-stopped
+    networks:
+      - transudeck-network
+
+networks:
+  transudeck-network:
+    driver: bridge

@@ -1,0 +1,16 @@
+services:
+  transudeck:
+    container_name: transudeck-dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload

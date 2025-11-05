@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TranSuDeck - Translate, Summarize & Create Deck</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <h1>🎯 TranSuDeck</h1>
+                <p class="subtitle">Translate + Summarize + Deck</p>
+            </div>
+            <div class="header-controls">
+                <div class="model-selector">
+                    <label for="ai-model">AI Model:</label>
+                    <select id="ai-model">
+                        <option value="">Loading models...</option>
+                    </select>
+                </div>
+                <button id="settings-btn" class="btn btn-icon" title="Settings">
+                    ⚙️ Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content - 2 Column Layout -->
+        <div class="main-content">
+            <!-- Left Panel: Input -->
+            <div class="left-panel">
+                <div class="panel-section">
+                    <h2>📝 Input</h2>
+                    
+                    <!-- Source Text -->
+                    <div class="form-group">
+                        <label for="source-text">Source Text:</label>
+                        <textarea id="source-text" placeholder="Enter text to translate and summarize..."></textarea>
+                    </div>
+
+                    <!-- Additional Instructions -->
+                    <div class="form-group">
+                        <label for="additional-instructions">Additional Instructions (Optional):</label>
+                        <textarea id="additional-instructions" rows="3" placeholder="Add any specific instructions for translation or summarization..."></textarea>
+                    </div>
+
+                    <!-- Language and Slides Settings -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="source-language">Source Language:</label>
+                            <select id="source-language" class="form-control">
+                                <option value="en">English</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="es">Spanish</option>
+                                <option value="hi">Hindi</option>
+                                <option value="vi">Vietnamese</option>
+                                <option value="th">Thai</option>
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+                            <label for="target-language">Target Language:</label>
+                            <select id="target-language" class="form-control">
+                                <option value="ja">Japanese</option>
+                                <option value="en">English</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="es">Spanish</option>
+                                <option value="hi">Hindi</option>
+                                <option value="vi">Vietnamese</option>
+                                <option value="th">Thai</option>
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+                            <label for="num-slides">Number of Slides:</label>
+                            <input type="number" id="num-slides" min="1" max="20" value="3">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="form-actions">
+                        <button id="translate-summarize-btn" class="btn btn-primary btn-large">
+                            🚀 Translate & Summarize
+                        </button>
+                    </div>
+                    
+                    <button id="clear-all-btn" class="btn btn-secondary btn-large">
+                        🗑️ Clear
+                    </button>
+                </div>
+
+                <!-- Translation & Summary Results -->
+                <div class="panel-section">
+                    <h2>📄 Translation & Summary</h2>
+                    
+                    <div class="translation-summary-container">
+                        <!-- Translation -->
+                        <div class="translation-section">
+                            <h3>Translation</h3>
+                            <textarea id="translated-text" readonly placeholder="Translation will appear here..."></textarea>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="summary-section">
+                            <h3>Summary</h3>
+                            <div id="summary-display" class="summary-markdown-display">
+                                <p class="placeholder-text">Summary will appear here...</p>
+                            </div>
+                            
+                            <div class="summary-actions">
+                                <button id="send-to-pptx-btn" class="btn btn-success" disabled>
+                                    📤 Send to Editor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Slide Editor -->
+            <div class="right-panel">
+                <div class="panel-section">
+                    <h2>🎨 Slide Editor</h2>
+                    
+                    <!-- Slide Controls -->
+                    <div class="slide-controls">
+                        <button id="add-slide-btn" class="btn btn-primary">
+                            ➕ Add Slide
+                        </button>
+                        <button id="delete-slide-btn" class="btn btn-danger">
+                            🗑️ Delete Slide
+                        </button>
+                    </div>
+
+                    <!-- Slides Container -->
+                    <div class="slides-container">
+                        <!-- Slides Preview (Left) -->
+                        <div id="slides-preview" class="slides-preview">
+                            <!-- Slide previews will be inserted here -->
+                        </div>
+
+                        <!-- Slide Editor (Right) -->
+                        <div class="slide-editor">
+                            <h3>Slide Content (Markdown):</h3>
+                            
+                            <!-- PPTX生成ルール（折りたたみ可能） -->
+                            <div class="rules-container">
+                                <button type="button" class="rules-toggle" onclick="toggleRules()">
+                                    <span id="rulesToggleIcon">▶</span> PPTX Generation Rules
+                                </button>
+                                <div id="rulesContent" class="rules-content">
+                                    <div class="rules-section">
+                                        <h4>📌 Headings & Lists</h4>
+                                        <ul>
+                                            <li><code>#</code> H1 - Title slide (center-aligned, large font)</li>
+                                            <li><code>##</code> H2 - Slide title (top of slide)</li>
+                                            <li><code>###</code> H3 - Section heading (bold, 20pt, no bullet)</li>
+                                            <li><code>####</code> H4 - Subsection heading (bold, 18pt, no bullet)</li>
+                                            <li><code>-</code> Bullet list (bullet marker displayed)</li>
+                                            <li><code>1.</code> Numbered list (numbers displayed)</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="rules-section">
+                                        <h4>📐 Indentation</h4>
+                                        <ul>
+                                            <li>2 spaces = 1 indent level</li>
+                                            <li>Maximum 9 levels (0-8)</li>
+                                            <li>Example:
+                                                <pre>- Parent item
+  - Child item (2 spaces)
+    - Grandchild item (4 spaces)</pre>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="rules-section">
+                                        <h4>🎨 Text Formatting</h4>
+                                        <ul>
+                                            <li><code>**text**</code> or <code>__text__</code> - <strong>Bold</strong></li>
+                                            <li><code>*text*</code> or <code>_text_</code> - <em>Italic</em></li>
+                                            <li><code>***text***</code> - <strong><em>Bold + Italic</em></strong></li>
+                                            <li><code>&lt;u&gt;text&lt;/u&gt;</code> - <u>Underline</u></li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="rules-section">
+                                        <h4>⚠️ Important Notes</h4>
+                                        <ul>
+                                            <li>Only <strong>one H1 or H2</strong> per slide (first one becomes title)</li>
+                                            <li>Only <code>-</code> creates bullet points (not <code>*</code>)</li>
+                                            <li>Headings (H3-H6) do not show bullet markers</li>
+                                            <li>Plain text does not show bullet markers</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Markdown Toolbar -->
+                            <div class="markdown-toolbar">
+                                <button type="button" class="toolbar-btn" data-action="h1" title="Heading 1">
+                                    <strong>H1</strong>
+                                </button>
+                                <button type="button" class="toolbar-btn" data-action="h2" title="Heading 2">
+                                    <strong>H2</strong>
+                                </button>
+                                <button type="button" class="toolbar-btn" data-action="h3" title="Heading 3">
+                                    <strong>H3</strong>
+                                </button>
+                                <button type="button" class="toolbar-btn" data-action="h4" title="Heading 4">
+                                    <strong>H4</strong>
+                                </button>
+                                <div class="toolbar-separator"></div>
+                                <button type="button" class="toolbar-btn" data-action="bold" title="Bold">
+                                    <strong>B</strong>
+                                </button>
+                                <button type="button" class="toolbar-btn" data-action="italic" title="Italic">
+                                    <em>I</em>
+                                </button>
+                                <button type="button" class="toolbar-btn" data-action="underline" title="Underline">
+                                    <u>U</u>
+                                </button>
+                                <div class="toolbar-separator"></div>
+                                <button type="button" class="toolbar-btn" data-action="ul" title="Bullet List">
+                                    • List
+                                </button>
+                                <button type="button" class="toolbar-btn" data-action="ol" title="Numbered List">
+                                    1. List
+                                </button>
+                            </div>
+                            
+                            <textarea id="slide-content" placeholder="Enter slide content in Markdown format..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Large Preview -->
+                    <div class="slide-preview-large-container">
+                        <h3>Slide Preview:</h3>
+                        <div id="slide-preview-large" class="slide-preview-large">
+                            <div class="placeholder-text">Select a slide to preview</div>
+                        </div>
+                    </div>
+
+                    <!-- Generate PPTX Button -->
+                    <div class="form-actions">
+                        <button id="generate-pptx-btn" class="btn btn-success btn-large" disabled>
+                            📊 Generate PPTX
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>⚙️ Settings</h2>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="api-key">API Key:</label>
+                    <input type="password" id="api-key" placeholder="Enter your GenAI Hub API key" required>
+                </div>
+                <div class="form-group">
+                    <label for="api-url">API URL:</label>
+                    <input type="text" id="api-url" placeholder="https://your-genai-hub-url.com" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-settings" class="btn btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
