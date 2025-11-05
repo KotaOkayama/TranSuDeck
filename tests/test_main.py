@@ -1,8 +1,8 @@
 """
 TranSuDeck のテスト
 """
-import pytest
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)
@@ -34,6 +34,6 @@ def test_static_files():
     """静的ファイルの提供テスト"""
     response = client.get("/static/css/style.css")
     assert response.status_code == 200
-    
+
     response = client.get("/static/js/app.js")
     assert response.status_code == 200
