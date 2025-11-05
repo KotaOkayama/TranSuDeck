@@ -49,7 +49,6 @@ settings = Settings()
 
 def load_env_config():
     """Load configuration from .env file"""
-    global settings
     if ENV_FILE_PATH.exists():
         try:
             # Read .env file manually to ensure it's loaded
@@ -81,7 +80,6 @@ def load_env_config():
 
 def save_env_config(api_key: str, api_url: str) -> bool:
     """Save API configuration to .env file"""
-    global settings
     try:
         env_content = f"""GENAI_API_KEY={api_key}
 GENAI_API_URL={api_url}
