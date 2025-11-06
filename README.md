@@ -86,7 +86,7 @@ TranSuDeck is a web application that leverages GenAI Hub to perform text transla
 
 Clone repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/KotaOkayama/TranSuDeck
 cd TranSuDeck
 ```
 

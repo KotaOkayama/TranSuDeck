@@ -84,7 +84,7 @@ TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPo
 
 リポジトリのクローン:
 ```bash
-git clone <repository-url>
+git clone https://github.com/KotaOkayama/TranSuDeck
 cd TranSuDeck
 ```
 
