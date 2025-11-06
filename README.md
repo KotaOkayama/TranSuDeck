@@ -1,162 +1,164 @@
 # TranSuDeck
 
-GenAI Hubを使用した翻訳・要約・PPTX生成アプリケーション
+Translation, Summarization & PPTX Generation Application using GenAI Hub
 
-## 概要
+## Overview
 
-TranSuDeckは、GenAI Hubを活用してテキストの翻訳、要約、PowerPointプレゼンテーションの生成を行うWebアプリケーションです。
+TranSuDeck is a web application that leverages GenAI Hub to perform text translation, summarization, and PowerPoint presentation generation.
 
-## UI スクリーンショット
+## UI Screenshots
 
-### API設定画面（初回起動時）
-![API設定画面](images/API.png)
+### API Settings Screen (First Launch)
+![API Settings Screen](images/API.png)
 
-### メインUI画面
-![メインUI画面](images/UI.png)
+### Main UI Screen
+![Main UI Screen](images/UI.png)
 
-## 機能
+## Features
 
-- **翻訳**: 多言語テキスト翻訳（10言語対応）
-- **要約**: 長文テキストの自動要約
-- **PPTX生成**: PowerPointファイルの自動生成
-- **モデル選択**: Claude、Llamaなどから選択可能
-- **初回設定**: API設定画面で設定を自動保存
+- **Translation**: Multilingual text translation (10 languages supported)
+- **Summarization**: Automatic summarization of long texts
+- **PPTX Generation**: Automatic PowerPoint file generation
+- **Model Selection**: Choose from Claude, Llama, and more
+- **Initial Setup**: Automatic settings save via API configuration screen
 
-## 対応言語
+## Supported Languages
 
-| 言語 | コード |
-|------|--------|
-| English（英語） | en |
-| Japanese（日本語） | ja |
-| Korean（韓国語） | ko |
-| Chinese（中国語） | zh |
-| French（フランス語） | fr |
-| German（ドイツ語） | de |
-| Spanish（スペイン語） | es |
-| Hindi（ヒンディー語） | hi |
-| Vietnamese（ベトナム語） | vi |
-| Thai（タイ語） | th |
+| Language | Code |
+|----------|------|
+| English | en |
+| Japanese | ja |
+| Korean | ko |
+| Chinese | zh |
+| French | fr |
+| German | de |
+| Spanish | es |
+| Hindi | hi |
+| Vietnamese | vi |
+| Thai | th |
 
-## 必要要件
+## Requirements
 
 - Docker & Docker Compose
-- GenAI Hub APIアクセス権限
+- GenAI Hub API access
 
-## 🚀 クイックスタート（利用者向け）
+## 🚀 Quick Start (For Users)
 
-### GitHub Container Registry からのイメージ利用
+### Using Image from GitHub Container Registry
 
-1. Dockerイメージのプル:
+1. Pull Docker image:
 ```bash
    docker pull ghcr.io/kotaokayama/transudeck:latest
 ```
-2. コンテナの起動:
+
+2. Start container:
 ```bash
    docker run -d -p 8001:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
 ```
-   - アプリケーションにアクセスするポートを変更する場合は左側のポート番号（ホスト側）のみを変更してください
-   - 例: -p 8080:8001 でポート8080でアクセス可能
 
-3. アプリケーションへのアクセス:
-   - ブラウザで http://localhost:8001 を開く
-   - 初回起動時にAPI キーとAPI URLを設定
+   - To change the access port, modify only the left port number (host side)
+   - Example: -p 8080:8001 to access via port 8080
 
-4. コンテナの停止:
+3. Access the application:
+   - Open http://localhost:8001 in your browser
+   - Configure API Key and API URL on first launch
+
+4. Stop container:
 ```bash
    docker stop transudeck
 ```
 
-5. コンテナの起動（2回目以降）:
+5. Start container (subsequent launches):
 ```bash
    docker start transudeck
 ```
 
-6. コンテナの削除:
+6. Remove container:
 ```bash
    docker rm transudeck
 ```
 
-   注意: コンテナを削除すると、設定と生成ファイルも削除されます
+   Note: Removing the container will also delete settings and generated files
 
-## クイックスタート（開発者向け）
+## Quick Start (For Developers)
 
-### Dockerを使用
+### Using Docker
 
-リポジトリのクローン:
+Clone repository:
 ```bash
 git clone <repository-url>
 cd TranSuDeck
 ```
 
-起動:
+Start:
 ```bash
 docker-compose up -d --build
 ```
 
-ログ確認:
-
+Check logs:
 ```bash
 docker-compose logs -f
 ```
 
-ブラウザで http://localhost:8001 にアクセス
+Access http://localhost:8001 in your browser
 
-### ローカル環境
+### Local Environment
 
-仮想環境の作成と起動:
+Create and activate virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate
-Windows の場合: venv\Scripts\activate
+For Windows: venv\Scripts\activate
 ```
 
-依存パッケージのインストール:
+Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-アプリケーションの起動:
+Start application:
 ```bash
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-## 使用方法
+## Usage
 
-1. ブラウザで http://localhost:8001 にアクセス
-2. 初回起動時、API設定画面が表示されます
-3. GenAI Hub APIキーとエンドポイントURLを入力
-4. 「Save Settings」をクリック
-5. メイン画面でモデルを選択
-6. テキストを入力し「Translate & Summarize」をクリック
-7. 要約結果を「Send to Editor」でスライドエディタに送信
-8. スライドを編集後、「Generate PPTX」でPowerPointファイルを生成
+1. Access http://localhost:8001 in your browser
+2. API settings screen will appear on first launch
+3. Enter GenAI Hub API Key and endpoint URL
+4. Click "Save Settings"
+5. Select a model on the main screen
+6. Enter text and click "Translate & Summarize"
+7. Send summary results to slide editor with "Send to Editor"
+8. After editing slides, click "Generate PPTX" to create PowerPoint file
 
-## 環境変数
+## Environment Variables
 
-初回起動時の設定画面で自動的に保存されます。
+Settings are automatically saved via the initial configuration screen.
 
-Docker環境では /app/config/.env に、ローカル環境では .env に保存されます。
+In Docker environment, saved to /app/config/.env, in local environment to .env
 
-### 主な設定項目
+### Main Configuration Items
 
-| 変数名 | 説明 | 必須 |
-|--------|------|------|
-| GENAI_API_KEY | GenAI Hub APIキー | ✓ |
-| GENAI_API_URL | GenAI Hub APIエンドポイントURL | ✓ |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| GENAI_API_KEY | GenAI Hub API Key | ✓ |
+| GENAI_API_URL | GenAI Hub API Endpoint URL | ✓ |
 
-## プロジェクト構造
+## Project Structure
 
+```
 TranSuDeck/
 ├── app/
-│ ├── core/ # 翻訳・要約・PPTX生成機能
+│ ├── core/ # Translation, Summarization, PPTX generation
 │ │ ├── init.py
 │ │ ├── translator.py
 │ │ ├── summarizer.py
 │ │ └── pptx_generator.py
-│ ├── models/ # データモデル
+│ ├── models/ # Data models
 │ │ ├── init.py
 │ │ └── slide.py
-│ ├── utils/ # ユーティリティ
+│ ├── utils/ # Utilities
 │ │ ├── init.py
 │ │ └── helpers.py
 │ ├── static/ # HTML/CSS/JS
@@ -165,91 +167,90 @@ TranSuDeck/
 │ │ │ └── style.css
 │ │ └── js/
 │ │ └── app.js
-│ ├── config.py # 設定
-│ └── main.py # メインアプリ
-├── tests/ # テスト
+│ ├── config.py # Configuration
+│ └── main.py # Main application
+├── tests/ # Tests
 │ ├── init.py
 │ └── test_main.py
-├── docker/ # Dockerファイル
+├── docker/ # Docker files
 │ ├── Dockerfile
 │ └── Dockerfile.dev
-├── outputs/ # 生成ファイル出力先
-├── logs/ # ログ
+├── outputs/ # Generated files output
+├── logs/ # Logs
 ├── .github/
 │ └── workflows/
-│ └── ci.yml # CI/CD設定
-├── docker-compose.yml # Docker設定
-├── requirements.txt # 依存パッケージ
-├── requirements-dev.txt # 開発用パッケージ
-├── .env.example # 環境変数サンプル
+│ └── ci.yml # CI/CD configuration
+├── docker-compose.yml # Docker configuration
+├── requirements.txt # Dependencies
+├── requirements-dev.txt # Development dependencies
+├── .env.example # Environment variables example
 ├── .gitignore
 ├── README.md
-└── README_EN.md
+└── README_JP.md
+```
 
-## 🧪 テスト
+## 🧪 Testing
 
-### テストの実行
+### Run Tests
 
-すべてのテストを実行:
+Run all tests:
 ```bash
 make test
 ```
 
-または:
+Or:
 ```bash
 pytest
 ```
 
-## トラブルシューティング
+## Troubleshooting
 
-### 一般的な問題
+### Common Issues
 
-1. API設定の問題:
-   - API KeyとAPI URLが正しく設定されているか確認
-   - API Keyの権限を確認
-   - API URLが正しいフォーマットであることを確認（例: https://api.example.com/v1）
+1. API Configuration Issues:
+   - Verify API Key and API URL are correctly configured
+   - Check API Key permissions
+   - Ensure API URL is in correct format (e.g., https://api.example.com/v1)
 
-2. Docker関連の問題:
-   - Docker Desktopが起動していることを確認
-   - コンテナのログを確認: docker logs transudeck
-   - コンテナの再ビルドを試す
+2. Docker Related Issues:
+   - Confirm Docker Desktop is running
+   - Check container logs: docker logs transudeck
+   - Try rebuilding the container
 
-3. ポートが使用中:
-   別のポートを使用:
-```bash
+3. Port Already in Use:
+   Use a different port:
    docker run -d -p 8080:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
-```
 
-### 設定をリセットしたい
+### Reset Settings
 
-Docker環境（GitHub Container Registry）:
-コンテナを削除して再起動:
+Docker environment (GitHub Container Registry):
+Remove and restart container:
 ```bash
 docker stop transudeck
 docker rm transudeck
 docker run -d -p 8001:8001 --name transudeck ghcr.io/kotaokayama/transudeck:latest
 ```
 
-Docker環境（docker-compose）:
+Docker environment (docker-compose):
 ```bash
 docker-compose down --volumes
 docker-compose up -d
 ```
 
-ローカル環境:
+Local environment:
 ```bash
 rm .env
 ```
 
-アプリを再起動すると、API設定画面が再表示されます。
+After restarting the app, the API settings screen will be displayed again.
 
-### モデルが表示されない
+### Models Not Displaying
 
-- API設定が正しいか確認
-- ブラウザのコンソールでエラーを確認（F12キー）
-- ログを確認: docker logs transudeck
+- Verify API settings are correct
+- Check browser console for errors (F12 key)
+- Check logs: docker logs transudeck
 
-### 完全リセット（docker-compose）
+### Complete Reset (docker-compose)
 
 ```bash
 docker-compose down --rmi all --volumes --remove-orphans
@@ -257,12 +258,12 @@ docker-compose build --no-cache
 docker-compose up -d
 ```
 
-## セキュリティ注意事項
+## Security Notes
 
-- APIキーは安全に管理してください
-- 本番環境ではHTTPSを使用してください
-- 設定ファイルは絶対にGitにコミットしないでください
+- Keep your API keys secure
+- Use HTTPS in production environments
+- Never commit configuration files to Git
 
-## ライセンス
+## License
 
-MIT License - 詳細は LICENSE ファイルを参照
+MIT License - See LICENSE file for details
