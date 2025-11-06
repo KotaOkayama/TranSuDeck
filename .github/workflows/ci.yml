@@ -42,12 +42,10 @@ jobs:
     - name: Check formatting with black
       run: |
         black --check app/ tests/
-      continue-on-error: true
 
     - name: Check import sorting with isort
       run: |
-        isort --check-only app/ tests/
-      continue-on-error: true
+        isort --profile black --check-only app/ tests/
 
   test:
     name: Test Python ${{ matrix.python-version }}

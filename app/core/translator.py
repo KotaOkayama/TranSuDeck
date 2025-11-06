@@ -79,9 +79,11 @@ class Translator:
                     models = [model["id"] for model in data["data"]]
                 elif isinstance(data, list):
                     models = [
-                        model.get("id", str(model))
-                        if isinstance(model, dict)
-                        else str(model)
+                        (
+                            model.get("id", str(model))
+                            if isinstance(model, dict)
+                            else str(model)
+                        )
                         for model in data
                     ]
                 else:

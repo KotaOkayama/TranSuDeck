@@ -2,6 +2,7 @@
 PPTX生成モジュール
 マークダウン形式のテキストをPowerPointプレゼンテーションに変換
 """
+
 import logging
 import re
 from typing import List, Tuple, Union

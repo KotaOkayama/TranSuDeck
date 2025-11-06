@@ -122,6 +122,20 @@ class ModelListResponse(BaseModel):
     count: int
 
 
+# Favicon endpoint
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """Serve favicon"""
+    favicon_path = Path(__file__).parent / "static" / "favicon.ico"
+    logger.info(
+        f"Favicon requested. Path: {favicon_path}, Exists: {favicon_path.exists()}"
+    )
+    if favicon_path.exists():
+        return FileResponse(favicon_path, media_type="image/x-icon")
+    logger.error(f"Favicon not found at {favicon_path}")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the main HTML page"""
