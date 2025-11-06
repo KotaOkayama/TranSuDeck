@@ -46,7 +46,7 @@ jobs:
 
     - name: Check import sorting with isort
       run: |
-        isort --check-only app/ tests/
+        isort --profile black --check-only app/ tests/
       continue-on-error: true
 
   test:
