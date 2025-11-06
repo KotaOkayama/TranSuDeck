@@ -71,7 +71,7 @@ docker-up:
 	@echo "🐳 Starting Docker containers..."
 	docker-compose up -d
 	@echo "✅ Containers started"
-	@echo "💡 Access at: http://localhost:8000"
+	@echo "💡 Access at: http://localhost:8001"
 
 docker-down:
 	@echo "🐳 Stopping Docker containers..."
@@ -91,7 +91,7 @@ docker-test:
 	@docker rm -f transudeck-test 2>/dev/null || true
 	docker build -t transudeck:test -f docker/Dockerfile .
 	@echo "🚀 Starting test container..."
-	docker run -d -p 8000:8000 \
+	docker run -d -p 8001:8001 \
 		-e GENAI_HUB_API_KEY=test_key \
 		-e GENAI_HUB_API_URL=https://api.test.com \
 		-e DEBUG=true \
@@ -100,8 +100,8 @@ docker-test:
 	@echo "⏳ Waiting for container to start..."
 	@sleep 10
 	@echo "🔍 Testing endpoints..."
-	@curl -f http://localhost:8000/ > /dev/null 2>&1 && echo "✅ Root endpoint OK" || echo "❌ Root endpoint failed"
-	@curl -f http://localhost:8000/api/config/status > /dev/null 2>&1 && echo "✅ Config status OK" || echo "❌ Config status failed"
+	@curl -f http://localhost:8001/ > /dev/null 2>&1 && echo "✅ Root endpoint OK" || echo "❌ Root endpoint failed"
+	@curl -f http://localhost:8001/api/config/status > /dev/null 2>&1 && echo "✅ Config status OK" || echo "❌ Config status failed"
 	@echo "🧹 Cleaning up..."
 	@docker stop transudeck-test
 	@docker rm transudeck-test
@@ -131,13 +131,13 @@ lint:
 format-check:
 	@echo "🎨 Checking code format..."
 	@black --check app/ tests/ && echo "✅ Black: OK" || echo "❌ Black: Formatting needed"
-	@isort --check-only app/ tests/ && echo "✅ isort: OK" || echo "❌ isort: Import sorting needed"
+	@isort --profile black --check-only app/ tests/ && echo "✅ isort: OK" || echo "❌ isort: Import sorting needed"
 
 # 自動フォーマット
 format:
 	@echo "🎨 Formatting code..."
-	black app/ tests/
-	isort app/ tests/
+	@isort --profile black app/ tests/
+	@black app/ tests/
 	@echo "✅ Code formatted"
 
 # 型チェック
@@ -151,16 +151,16 @@ all-tests:
 	@echo "🧪 Running all tests..."
 	@echo ""
 	@echo "1️⃣ Lint checks..."
-	@make lint
+	@$(MAKE) lint
 	@echo ""
 	@echo "2️⃣ Format checks..."
-	@make format-check
+	@$(MAKE) format-check
 	@echo ""
 	@echo "3️⃣ Python tests..."
-	@make test
+	@$(MAKE) test
 	@echo ""
 	@echo "4️⃣ Docker build test..."
-	@make docker-test
+	@$(MAKE) docker-test
 	@echo ""
 	@echo "✅ All tests passed! Ready to commit."
 
